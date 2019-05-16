@@ -1,17 +1,14 @@
 const express = require('express');
-const session = require('express-session');
-const MongoDBStore = require('connect-mongodb-session')(session);
 const cors = require('cors');
-const passport = require('passport');
-const DiscordStrategy = require('passport-discord').Strategy;
 const path = require('path');
 const bodyParser = require('body-parser');
 const history = require('connect-history-api-fallback');
-const database = require('./database');
 const moment = require('moment');
 
-const dotenv = require('dotenv');
-dotenv.config();
+require('dotenv').config();
+
+const database = require('./server/database');
+let passport = require('./server/routes/passport.js');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -25,63 +22,13 @@ class EventPassthrough extends EventEmitter {
 
 let eventHandler = new EventPassthrough()
 
-var store = new MongoDBStore({
-  uri: process.env.MONGO_URL,
-  collection: process.env.MONGO_SESSION_COLLECTION
-});
-
-store.on('error', function(error) {
-  console.error(error);
-});
-
-app.use(require('express-session')({
-  secret: process.env.EXPRESS_SESSION_SECRET,
-  cookie: {
-    maxAge: 1000 * 60 * 60  //1 hour session for testing TODO: Fix later
-  },
-  store: store,
-  resave: false,
-  saveUninitialized: false
-}));
-
-passport.use(new DiscordStrategy({
-  clientID: process.env.DISCORD_CLIENT_ID,
-  clientSecret: process.env.DISCORD_CLIENT_SECRET,
-  callbackURL: process.env.DISCORD_CALLBACK_URL,
-  scope: ['identify']
-}, function(accessToken, refreshToken, profile, callback) {
-  var user = {
-    discordId: profile.id,
-    discordUsername: profile.username,
-    discordDiscriminator: profile.discriminator,
-    discordAvatar: profile.avatar
-  };
-  return callback(null, user);
-}));
-
-passport.serializeUser(function(user, done) {
-  done(null, user);
-});
-
-passport.deserializeUser(function(user, done) {
-  done(null, user);
-});
-
-app.use(passport.initialize());
-app.use(passport.session());
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
 // API calls
 
-app.get('/api/discord/auth', passport.authenticate('discord'));
-app.get('/api/discord/auth/callback', passport.authenticate('discord', {
-  failureRedirect: '/'
-}), function(req, res) {
-  res.redirect('/')
-});
+passport(app, null)
 
 //get discord profile
 app.get('/api/discord/profile', function(req, res) {
@@ -331,11 +278,11 @@ app.put('/api/room/:roomName/hunt/:huntName/status/:status', function(req, res) 
 app.use(history({}));
 
 // Serve any static files
-app.use(express.static(path.join(__dirname, '../client/dist')));
+app.use(express.static(path.join(__dirname, './client/dist')));
 
 // Handle Vue routing, return all unknown requests to Vue router
 app.get('*', function(req, res) {
-  res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
+  res.sendFile(path.join(__dirname, './client/dist', 'index.html'));
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
