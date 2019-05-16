@@ -1,22 +1,17 @@
-const dotenv = require('dotenv');
-dotenv.config();
-
 const express = require('express');
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
-
 const cors = require('cors');
-
 const passport = require('passport');
 const DiscordStrategy = require('passport-discord').Strategy;
-
 const path = require('path');
 const bodyParser = require('body-parser');
 const history = require('connect-history-api-fallback');
-
 const database = require('./database');
-
 const moment = require('moment');
+
+const dotenv = require('dotenv');
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -36,34 +31,9 @@ var store = new MongoDBStore({
 });
 
 store.on('error', function(error) {
-  console.log(error);
+  console.error(error);
 });
 
-passport.use(new DiscordStrategy({
-  clientID: process.env.DISCORD_CLIENT_ID,
-  clientSecret: process.env.DISCORD_CLIENT_SECRET,
-  callbackURL: process.env.DISCORD_CALLBACK_URL,
-  scope: ['identify']
-}, function(accessToken, refreshToken, profile, cb) {
-  var user = {
-    discordId: profile.id,
-    discordUsername: profile.username,
-    discordDiscriminator: profile.discriminator,
-    discordAvatar: profile.avatar
-  };
-  return cb(null, user);
-}));
-
-passport.serializeUser(function(user, done) {
-  done(null, user);
-});
-
-passport.deserializeUser(function(user, done) {
-  done(null, user);
-});
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(require('express-session')({
   secret: process.env.EXPRESS_SESSION_SECRET,
   cookie: {
@@ -74,8 +44,34 @@ app.use(require('express-session')({
   saveUninitialized: false
 }));
 
+passport.use(new DiscordStrategy({
+  clientID: process.env.DISCORD_CLIENT_ID,
+  clientSecret: process.env.DISCORD_CLIENT_SECRET,
+  callbackURL: process.env.DISCORD_CALLBACK_URL,
+  scope: ['identify']
+}, function(accessToken, refreshToken, profile, callback) {
+  var user = {
+    discordId: profile.id,
+    discordUsername: profile.username,
+    discordDiscriminator: profile.discriminator,
+    discordAvatar: profile.avatar
+  };
+  return callback(null, user);
+}));
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
+
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
 // API calls
@@ -106,6 +102,7 @@ app.get('/api/room/:roomName', function(req, res) {
   })
 });
 
+//get room stream of events
 app.get('/api/room/:roomName/stream', function(req, res) {
 
   function updateHandler(updateObject) {
@@ -276,6 +273,7 @@ app.post('/api/room/:roomName', function(req, res) {
   })
 });
 
+//add discord username+discrim to room as memberType
 app.post('/api/room/:roomName/memberType/:memberType/user/:discordUsername', function(req, res) {
   if(!req.session.passport) {
     return res.status(401).json();
@@ -304,60 +302,40 @@ app.put('/api/room/:roomName/hunt/:huntName/status/:status', function(req, res) 
     return res.status(400).json({error: 'Missing either roomName, huntName, or status path parameter(s)'})
   }
 
-  if(['found', 'dead', 'respawning', 'unknown'].indexOf(req.params.status) < 0) {
-    return res.status(400).json({error: 'Status path parameter is invalid'})
+  if(['found', 'dead'].indexOf(req.params.status) < 0) {
+    return res.status(400).json({error: 'Status path parameter is invalid. Must be either found or dead.'})
   }
 
   let now = moment().valueOf()
 
-  if(req.params.status === 'respawning') { //don't want to set timestamp if respawning
-    database.Room.updateOne({
-      name: req.params.roomName,
-      'huntStatuses.name': req.params.huntName
-    },
-    {
-      '$set': {'huntStatuses.$.status': req.params.status}
-    },
-    function(err, result) {
-      if(err) return res.json({error: err})
-      eventHandler.emitEvent('roomUpdate', {
-        roomName: req.params.roomName,
-        huntName: req.params.huntName,
-        huntStatus: req.params.status
-      });
-      return res.json(result)
-    })
-  } else {
-    database.Room.updateOne({
-      name: req.params.roomName,
-      'huntStatuses.name': req.params.huntName
-    },
-    {
-      '$set': {'huntStatuses.$.status': req.params.status, 'huntStatuses.$.deathTimestamp': now}
-    },
-    function(err, result) {
-      if(err) return res.json({error: err})
-      eventHandler.emitEvent('roomUpdate', {
-        roomName: req.params.roomName,
-        huntName: req.params.huntName,
-        huntStatus: req.params.status,
-        huntDeathTimestamp: now
-      });
-      return res.json(result)
-    })
-  }
+  database.Room.updateOne({
+    name: req.params.roomName,
+    'huntStatuses.name': req.params.huntName
+  },
+  {
+    '$set': {'huntStatuses.$.status': req.params.status, 'huntStatuses.$.deathTimestamp': now}
+  },
+  function(err, result) {
+    if(err) return res.json({error: err})
+    eventHandler.emitEvent('roomUpdate', {
+      roomName: req.params.roomName,
+      huntName: req.params.huntName,
+      huntStatus: req.params.status,
+      huntDeathTimestamp: now
+    });
+    return res.json(result)
+  })
+
 });
 
 app.use(history({}));
 
-// if (process.env.NODE_ENV === 'production') {
-  // Serve any static files
-  app.use(express.static(path.join(__dirname, '../client/dist')));
+// Serve any static files
+app.use(express.static(path.join(__dirname, '../client/dist')));
 
-  // Handle Vue routing, return all requests to Vue app
-  app.get('*', function(req, res) {
-    res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
-  });
-// }
+// Handle Vue routing, return all unknown requests to Vue router
+app.get('*', function(req, res) {
+  res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
+});
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
