@@ -228,7 +228,7 @@
     },
     methods: {
       avatarUrl: function () {
-        return 'https://cdn.discordapp.com/avatars/' + this.profile.discordId + '/' + this.profile.discordAvatar + '.png'
+        return `https://cdn.discordapp.com/avatars/${this.profile.discordId}/${this.profile.discordAvatar}.png`
       },
       compare: function (a, b) {
         let nameA = a.name.toUpperCase()

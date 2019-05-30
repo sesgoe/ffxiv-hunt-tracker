@@ -12,11 +12,11 @@ module.exports = function (server, config) {
         uri: process.env.MONGO_URL,
         collection: process.env.MONGO_SESSION_COLLECTION
     });
-    
+
     store.on('error', function(error) {
         console.error(error);
     });
-    
+
     server.use(require('express-session')({
         secret: process.env.EXPRESS_SESSION_SECRET,
         cookie: {
@@ -26,7 +26,7 @@ module.exports = function (server, config) {
         resave: false,
         saveUninitialized: false
     }));
-    
+
     passport.use(new DiscordStrategy({
         clientID: process.env.DISCORD_CLIENT_ID,
         clientSecret: process.env.DISCORD_CLIENT_SECRET,
@@ -41,15 +41,15 @@ module.exports = function (server, config) {
         };
         return callback(null, user);
     }));
-    
+
     passport.serializeUser(function(user, done) {
         done(null, user);
     });
-    
+
     passport.deserializeUser(function(user, done) {
         done(null, user);
     });
-    
+
     server.use(passport.initialize());
     server.use(passport.session());
 

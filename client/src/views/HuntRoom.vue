@@ -94,40 +94,36 @@
           <v-layout
             justify-center
             xs12
-            row
-            wrap
-          >
-            <v-flex xs4>
-              <v-text-field label="Discord Username" />
-            </v-flex>
-            <v-flex xs6>
-              <v-select
-                :items="items"
-                solo
-                required
-              />
-            </v-flex>
-            <v-flex xs1>
-              <v-btn
-                flat
-                icon
-                color="green"
-              >
-                <v-icon>add</v-icon>
-              </v-btn>
-            </v-flex>
-          </v-layout>
-          <v-layout
-            justify-center
-            xs12
           >
             <v-flex>
-              <h3>Hunt Train Organizers</h3>
+              <v-layout align-center justify-center row>
+                <v-flex xs3>
+                  <h3>Organizers</h3>
+                </v-flex>
+                <v-flex xs2>
+                  <v-tooltip top>
+                    <template v-slot:activator="{on}">
+                      <v-btn flat icon color="blue" v-on="on">
+                        <v-icon>info</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Can mark hunts as dead, found, and see timers</span>
+                  </v-tooltip>
+                </v-flex>
+                <v-flex xs4>
+                  <v-text-field label="Discord Username" />
+                </v-flex>
+                <v-flex xs3>
+                  <v-btn
+                  color="green"
+                >Add New</v-btn>
+                </v-flex>
+              </v-layout>
               <div
-                v-for="hto in room.roles[1].members"
-                :key="`${hto.discordUsername}~${hto.discordDiscriminator}`"
+                v-for="organizer in room.roles[1].members"
+                :key="`${organizer.username}~${organizer.discriminator}`"
               >
-                <span>Test#123</span>
+                <span>{{organizer.username}}#{{organizer.discriminator}}</span>
                 <v-btn
                   flat
                   icon
@@ -143,12 +139,34 @@
             xs12
           >
             <v-flex>
-              <h3>Scouts</h3>
+              <v-layout align-center justify-center row>
+                <v-flex xs3>
+                  <h3>Scouts</h3>
+                </v-flex>
+                <v-flex xs2>
+                  <v-tooltip top>
+                    <template v-slot:activator="{on}">
+                      <v-btn flat icon color="blue" v-on="on">
+                        <v-icon>info</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Can mark hunts as found and see timers</span>
+                  </v-tooltip>
+                </v-flex>
+                <v-flex xs4>
+                  <v-text-field label="Discord Username" />
+                </v-flex>
+                <v-flex xs3>
+                  <v-btn
+                  color="green"
+                >Add New</v-btn>
+                </v-flex>
+              </v-layout>
               <div
-                v-for="hto in room.roles[2].members"
-                :key="`${hto.discordUsername}~${hto.discordDiscriminator}`"
+                v-for="scout in room.roles[2].members"
+                :key="`${scout.username}~${scout.discriminator}`"
               >
-                <span>Test#123</span>
+                <span>{{scout.username}}#{{scout.discriminator}}</span>
                 <v-btn
                   flat
                   icon
@@ -164,12 +182,34 @@
             xs12
           >
             <v-flex>
-              <h3>Members</h3>
+              <v-layout align-center justify-center row>
+                <v-flex xs3>
+                  <h3>Members</h3>
+                </v-flex>
+                <v-flex xs2>
+                  <v-tooltip top>
+                    <template v-slot:activator="{on}">
+                      <v-btn flat icon color="blue" v-on="on">
+                        <v-icon>info</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>May view hunt statuses without timers</span>
+                  </v-tooltip>
+                </v-flex>
+                <v-flex xs4>
+                  <v-text-field label="Discord Username" />
+                </v-flex>
+                <v-flex xs3>
+                  <v-btn
+                  color="green"
+                >Add New</v-btn>
+                </v-flex>
+              </v-layout>
               <div
-                v-for="hto in room.roles[3].members"
-                :key="`${hto.discordUsername}~${hto.discordDiscriminator}`"
+                v-for="member in room.roles[3].members"
+                :key="`${member.username}~${member.discriminator}`"
               >
-                <span>Test#123</span>
+                <span>{{member.username}}#{{member.discriminator}}</span>
                 <v-btn
                   flat
                   icon
@@ -368,6 +408,58 @@
         this.room.members = result.roles
         this.room.name = result.name
 
+        //FOR TESTING
+        this.room.roles[1].members.push(
+          {
+              'userId': 123456789,
+              'username': 'Ses',
+              'discriminator': '1337',
+              'avatar': 'n/a'
+          }
+        )
+        this.room.roles[1].members.push(
+          {
+              'userId': 123456789,
+              'username': 'Ses',
+              'discriminator': '1337',
+              'avatar': 'n/a'
+          }
+        )
+
+        this.room.roles[2].members.push(
+          {
+              'userId': 123456789,
+              'username': 'Nemesis',
+              'discriminator': '1337',
+              'avatar': 'n/a'
+          }
+        )
+        this.room.roles[2].members.push(
+          {
+              'userId': 123456789,
+              'username': 'Nemesis',
+              'discriminator': '1337',
+              'avatar': 'n/a'
+          }
+        )
+
+        this.room.roles[3].members.push(
+          {
+              'userId': 123456789,
+              'username': 'Chrono',
+              'discriminator': '1337',
+              'avatar': 'n/a'
+          }
+        )
+        this.room.roles[3].members.push(
+          {
+              'userId': 123456789,
+              'username': 'Chrono',
+              'discriminator': '1337',
+              'avatar': 'n/a'
+          }
+        )
+
         for (let i = 0; i < 12; i++) {
           this.room.huntStatuses[i].status = result.huntStatuses[i].status
           this.room.huntStatuses[i].deathTimestamp = result.huntStatuses[i].deathTimestamp
@@ -395,3 +487,6 @@
     }
   }
 </script>
+
+<style>
+</style>

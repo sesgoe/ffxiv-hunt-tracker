@@ -10,6 +10,8 @@ require('dotenv').config();
 const database = require('./server/database');
 let passport = require('./server/routes/passport.js');
 
+let databaseService = require('./server/services/databaseService');
+
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -41,12 +43,15 @@ app.get('/api/discord/profile', function(req, res) {
 });
 
 //get room by roomName
-app.get('/api/room/:roomName', function(req, res) {
-  database.Room.findOne({name: req.params.roomName}, function(err, result) {
-    if(err) return res.json({error: error})
+app.get('/api/room/:roomName', async function(req, res) {
 
-    return res.json({result: result})
-  })
+  let room = await databaseService.getRoomByName(req.params.roomName)
+
+  if(room.error) {
+    return res.json({error: room.error})
+  }
+
+  return res.json({result: room})
 });
 
 //get room stream of events
@@ -221,7 +226,7 @@ app.post('/api/room/:roomName', function(req, res) {
 });
 
 //add discord username+discrim to room as memberType
-app.post('/api/room/:roomName/memberType/:memberType/user/:discordUsername', function(req, res) {
+app.post('/api/room/:roomName/memberType/:memberType/user/:discordUsername', async function(req, res) {
   if(!req.session.passport) {
     return res.status(401).json();
   }
@@ -230,11 +235,30 @@ app.post('/api/room/:roomName/memberType/:memberType/user/:discordUsername', fun
     return res.status(400).json({error: 'Missing either roomName, memberType, or discordUsername path parameter(s)'})
   }
 
-  if(['hto', 'scout', 'member'].indexOf(req.params.memberType) < 0) {
+  if(['organizer', 'scout', 'member'].indexOf(req.params.memberType) < 0) {
     return res.status(400).json({error: 'MemberType path parameter is invalid'})
   }
 
-  console.log(req.params.discordUsername)
+  let room = await databaseService.getRoomByName(req.params.roomName)
+  let memberIndex = ['organizer', 'scout', 'member'].indexOf(req.params.memberType)
+  let discordString = req.params.discordUsername.split('~')
+  let username = discordString[0]
+  let discriminator = discordString[1]
+
+  room.roles[memberIndex+1].members.push(
+    {
+      userId: "0",
+      username: username,
+      discriminator: discriminator,
+      avatar: "0"
+    }
+  )
+
+  room.save(function(error, result) {
+    if(error) return res.json({error: error})
+
+    return res.json({result: result})
+  })
 
 })
 
