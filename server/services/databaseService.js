@@ -1,4 +1,4 @@
-let database = require('../database');
+let database = require('../database')
 
 exports.getRoomByName = async (roomName) => {
     return new Promise((resolve, reject) => {

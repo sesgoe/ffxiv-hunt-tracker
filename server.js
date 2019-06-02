@@ -1,32 +1,32 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const bodyParser = require('body-parser');
-const history = require('connect-history-api-fallback');
-const moment = require('moment');
+const express = require('express')
+const cors = require('cors')
+const path = require('path')
+const bodyParser = require('body-parser')
+const history = require('connect-history-api-fallback')
+const moment = require('moment')
 
-require('dotenv').config();
+require('dotenv').config()
 
-const database = require('./server/database');
-let passport = require('./server/routes/passport.js');
+const database = require('./server/database')
+let passport = require('./server/routes/passport.js')
 
-let databaseService = require('./server/services/databaseService');
+let databaseService = require('./server/services/databaseService')
 
-const app = express();
-const port = process.env.PORT || 5000;
+const app = express()
+const port = process.env.PORT || 5000
 
 const EventEmitter = require('events')
 class EventPassthrough extends EventEmitter {
   emitEvent(eventType, obj) {
-    this.emit(eventType, obj);
+    this.emit(eventType, obj)
   }
 }
 
 let eventHandler = new EventPassthrough()
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(cors())
 
 // API calls
 
@@ -39,8 +39,8 @@ app.get('/api/discord/profile', function(req, res) {
     return res.status(401).json()
   }
 
-  return res.json({user: req.session.passport.user});
-});
+  return res.json({user: req.session.passport.user})
+})
 
 //get room by roomName
 app.get('/api/room/:roomName', async function(req, res) {
@@ -52,7 +52,7 @@ app.get('/api/room/:roomName', async function(req, res) {
   }
 
   return res.json({result: room})
-});
+})
 
 //get room stream of events
 app.get('/api/room/:roomName/stream', function(req, res) {
@@ -107,23 +107,23 @@ app.get('/api/user/:user/rooms/', function(req, res) {
 
     return res.json({result: result})
   })
-});
+})
 
 //create new room
 app.post('/api/room/:roomName', function(req, res) {
 
   if(!req.session.passport) {
     console.log('401 unauthorized')
-    return res.status(401).json();
+    return res.status(401).json()
   }
 
   if(!req.params.roomName) {
     console.log('missing roomName')
-    res.status(400);
-    return res.json({error: "The request is missing a roomName path parameter."});
+    res.status(400)
+    return res.json({error: "The request is missing a roomName path parameter."})
   }
 
-  var now = moment().valueOf();
+  var now = moment().valueOf()
 
   const room = new database.Room({
     name: req.params.roomName,
@@ -215,20 +215,20 @@ app.post('/api/room/:roomName', function(req, res) {
           members: []
         }
     ]
-  });
+  })
 
   room.save(function(error, result) {
     if(error) return res.json({error: error})
-    console.info(`Room name '${room.name}' created.`);
+    console.info(`Room name '${room.name}' created.`)
 
     return res.json({result: result})
   })
-});
+})
 
 //add discord username+discrim to room as memberType
 app.post('/api/room/:roomName/memberType/:memberType/user/:discordUsername', async function(req, res) {
   if(!req.session.passport) {
-    return res.status(401).json();
+    return res.status(401).json()
   }
 
   if(!req.params.roomName || !req.params.memberType || !req.params.discordUsername) {
@@ -245,6 +245,7 @@ app.post('/api/room/:roomName/memberType/:memberType/user/:discordUsername', asy
   let username = discordString[0]
   let discriminator = discordString[1]
 
+  //+1 because of roles[0] = owner
   room.roles[memberIndex+1].members.push(
     {
       userId: "0",
@@ -262,11 +263,42 @@ app.post('/api/room/:roomName/memberType/:memberType/user/:discordUsername', asy
 
 })
 
+app.delete('/api/room/:roomName/user/:discordUsername', async function(req, res) {
+  if(!req.session.passport) {
+    return res.status(401).json()
+  }
+
+  if(!req.params.roomName || !req.params.discordUsername) {
+    return res.status(400).json({error: 'Missing either roomName or discordUsername path parameter(s)'})
+  }
+
+  let room = await databaseService.getRoomByName(req.params.roomName)
+  let discordString = req.params.discordUsername.split('~')
+  let username = discordString[0]
+  let discriminator = discordString[1]
+
+  for(let i=1; i<4; i++) {
+    for(let j=0; j<room.roles[i].members.length; j++) {
+      if(room.roles[i].members[j].username === username && room.roles[i].members[j].discriminator === discriminator) {
+        room.roles[i].members.splice(j)
+        break
+      }
+    }
+  }
+
+  room.save(function(error, result) {
+    if(error) return res.json({error: error})
+
+    return res.json({result: result})
+  })
+
+})
+
 //update hunt status for room, hunt combo
 app.put('/api/room/:roomName/hunt/:huntName/status/:status', function(req, res) {
 
   if(!req.session.passport) {
-    return res.status(401).json();
+    return res.status(401).json()
   }
 
   if(!req.params.roomName || !req.params.huntName || !req.params.status) {
@@ -293,20 +325,20 @@ app.put('/api/room/:roomName/hunt/:huntName/status/:status', function(req, res) 
       huntName: req.params.huntName,
       huntStatus: req.params.status,
       huntDeathTimestamp: now
-    });
+    })
     return res.json(result)
   })
 
-});
+})
 
-app.use(history({}));
+app.use(history({}))
 
 // Serve any static files
-app.use(express.static(path.join(__dirname, './client/dist')));
+app.use(express.static(path.join(__dirname, './client/dist')))
 
 // Handle Vue routing, return all unknown requests to Vue router
 app.get('*', function(req, res) {
-  res.sendFile(path.join(__dirname, './client/dist', 'index.html'));
-});
+  res.sendFile(path.join(__dirname, './client/dist', 'index.html'))
+})
 
-app.listen(port, () => console.log(`Listening on port ${port}`));
+app.listen(port, () => console.log(`Listening on port ${port}`))

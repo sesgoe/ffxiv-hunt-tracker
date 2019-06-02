@@ -26,7 +26,7 @@
             </v-flex>
             <v-flex>
               <v-btn
-                v-if="profile.userId === room.roles[0].members[0].userId"
+                v-if="profile.discordId === room.roles[0].members[0].userId"
                 large
                 color="blue"
                 @click="dialog = true"
@@ -96,14 +96,23 @@
             xs12
           >
             <v-flex>
-              <v-layout align-center justify-center row>
+              <v-layout
+                align-center
+                justify-center
+                row
+              >
                 <v-flex xs3>
                   <h3>Organizers</h3>
                 </v-flex>
                 <v-flex xs2>
                   <v-tooltip top>
                     <template v-slot:activator="{on}">
-                      <v-btn flat icon color="blue" v-on="on">
+                      <v-btn
+                        flat
+                        icon
+                        color="blue"
+                        v-on="on"
+                      >
                         <v-icon>info</v-icon>
                       </v-btn>
                     </template>
@@ -111,27 +120,37 @@
                   </v-tooltip>
                 </v-flex>
                 <v-flex xs4>
-                  <v-text-field label="Discord Username" />
+                  <v-text-field v-model="organizerUsername" label="Discord Username" />
                 </v-flex>
                 <v-flex xs3>
                   <v-btn
-                  color="green"
-                >Add New</v-btn>
+                    color="green"
+                    @click="addDiscordUsernameToRoom(organizerUsername, 'organizer')"
+                  >
+                    Add New
+                  </v-btn>
                 </v-flex>
               </v-layout>
-              <div
-                v-for="organizer in room.roles[1].members"
-                :key="`${organizer.username}~${organizer.discriminator}`"
+              <v-layout
+                justify-center
+                align-center
+                v-for="(organizer, idx) in room.roles[1].members"
+                :key="`1~${idx}~${organizer.username}~${organizer.discriminator}`"
               >
-                <span>{{organizer.username}}#{{organizer.discriminator}}</span>
-                <v-btn
-                  flat
-                  icon
-                  color="red"
-                >
-                  <v-icon>clear</v-icon>
-                </v-btn>
-              </div>
+                <v-flex xs2>
+                  <span>{{ organizer.username }}#{{ organizer.discriminator }}</span>
+                </v-flex>
+                <v-flex xs10>
+                  <v-btn
+                    flat
+                    icon
+                    color="red"
+                    @click="deleteDiscordUsernameFromRoom(`${organizer.username}#${organizer.discriminator}`, 'organizer', idx)"
+                  >
+                    <v-icon>clear</v-icon>
+                  </v-btn>
+                </v-flex>
+              </v-layout>
             </v-flex>
           </v-layout>
           <v-layout
@@ -139,14 +158,23 @@
             xs12
           >
             <v-flex>
-              <v-layout align-center justify-center row>
+              <v-layout
+                align-center
+                justify-center
+                row
+              >
                 <v-flex xs3>
                   <h3>Scouts</h3>
                 </v-flex>
                 <v-flex xs2>
                   <v-tooltip top>
                     <template v-slot:activator="{on}">
-                      <v-btn flat icon color="blue" v-on="on">
+                      <v-btn
+                        flat
+                        icon
+                        color="blue"
+                        v-on="on"
+                      >
                         <v-icon>info</v-icon>
                       </v-btn>
                     </template>
@@ -154,27 +182,37 @@
                   </v-tooltip>
                 </v-flex>
                 <v-flex xs4>
-                  <v-text-field label="Discord Username" />
+                  <v-text-field v-model="scoutUsername" label="Discord Username" />
                 </v-flex>
                 <v-flex xs3>
                   <v-btn
-                  color="green"
-                >Add New</v-btn>
+                    color="green"
+                    @click="addDiscordUsernameToRoom(scoutUsername, 'scout')"
+                  >
+                    Add New
+                  </v-btn>
                 </v-flex>
               </v-layout>
-              <div
-                v-for="scout in room.roles[2].members"
-                :key="`${scout.username}~${scout.discriminator}`"
+              <v-layout
+                justify-center
+                align-center
+                v-for="(scout, idx) in room.roles[2].members"
+                :key="`2~${idx}~${scout.username}~${scout.discriminator}`"
               >
-                <span>{{scout.username}}#{{scout.discriminator}}</span>
-                <v-btn
-                  flat
-                  icon
-                  color="red"
-                >
-                  <v-icon>clear</v-icon>
-                </v-btn>
-              </div>
+                <v-flex xs2>
+                  <span>{{ scout.username }}#{{ scout.discriminator }}</span>
+                </v-flex>
+                <v-flex xs10>
+                  <v-btn
+                    flat
+                    icon
+                    color="red"
+                    @click="deleteDiscordUsernameFromRoom(`${scout.username}#${scout.discriminator}`, 'scout', idx)"
+                  >
+                    <v-icon>clear</v-icon>
+                  </v-btn>
+                </v-flex>
+              </v-layout>
             </v-flex>
           </v-layout>
           <v-layout
@@ -182,14 +220,23 @@
             xs12
           >
             <v-flex>
-              <v-layout align-center justify-center row>
+              <v-layout
+                align-center
+                justify-center
+                row
+              >
                 <v-flex xs3>
                   <h3>Members</h3>
                 </v-flex>
                 <v-flex xs2>
                   <v-tooltip top>
                     <template v-slot:activator="{on}">
-                      <v-btn flat icon color="blue" v-on="on">
+                      <v-btn
+                        flat
+                        icon
+                        color="blue"
+                        v-on="on"
+                      >
                         <v-icon>info</v-icon>
                       </v-btn>
                     </template>
@@ -197,27 +244,37 @@
                   </v-tooltip>
                 </v-flex>
                 <v-flex xs4>
-                  <v-text-field label="Discord Username" />
+                  <v-text-field v-model="memberUsername" label="Discord Username" />
                 </v-flex>
                 <v-flex xs3>
                   <v-btn
-                  color="green"
-                >Add New</v-btn>
+                    color="green"
+                    @click="addDiscordUsernameToRoom(memberUsername, 'member')"
+                  >
+                    Add New
+                  </v-btn>
                 </v-flex>
               </v-layout>
-              <div
-                v-for="member in room.roles[3].members"
-                :key="`${member.username}~${member.discriminator}`"
+              <v-layout
+                justify-center
+                align-center
+                v-for="(member, idx) in room.roles[3].members"
+                :key="`3~${idx}~${member.username}~${member.discriminator}`"
               >
-                <span>{{member.username}}#{{member.discriminator}}</span>
-                <v-btn
-                  flat
-                  icon
-                  color="red"
-                >
-                  <v-icon>clear</v-icon>
-                </v-btn>
-              </div>
+                <v-flex xs2>
+                  <span>{{ member.username }}#{{ member.discriminator }}</span>
+                </v-flex>
+                <v-flex xs10>
+                  <v-btn
+                    flat
+                    icon
+                    color="red"
+                    @click="deleteDiscordUsernameFromRoom(`${member.username}#${member.discriminator}`, 'member', idx)"
+                  >
+                    <v-icon>clear</v-icon>
+                  </v-btn>
+                </v-flex>
+              </v-layout>
             </v-flex>
           </v-layout>
         </v-container>
@@ -386,7 +443,10 @@
         'Hunt Train Organizer',
         'Scout',
         'Member'
-      ]
+      ],
+      organizerUsername: '',
+      scoutUsername: '',
+      memberUsername: ''
     }),
     watch: {
       '$route' (to, from) {
@@ -405,60 +465,8 @@
         let huntStatusRequest = await fetch(`/api/room/${roomName}`)
         let huntStatusJson = await huntStatusRequest.json()
         let result = huntStatusJson.result
-        this.room.members = result.roles
+        this.room.roles = result.roles
         this.room.name = result.name
-
-        //FOR TESTING
-        this.room.roles[1].members.push(
-          {
-              'userId': 123456789,
-              'username': 'Ses',
-              'discriminator': '1337',
-              'avatar': 'n/a'
-          }
-        )
-        this.room.roles[1].members.push(
-          {
-              'userId': 123456789,
-              'username': 'Ses',
-              'discriminator': '1337',
-              'avatar': 'n/a'
-          }
-        )
-
-        this.room.roles[2].members.push(
-          {
-              'userId': 123456789,
-              'username': 'Nemesis',
-              'discriminator': '1337',
-              'avatar': 'n/a'
-          }
-        )
-        this.room.roles[2].members.push(
-          {
-              'userId': 123456789,
-              'username': 'Nemesis',
-              'discriminator': '1337',
-              'avatar': 'n/a'
-          }
-        )
-
-        this.room.roles[3].members.push(
-          {
-              'userId': 123456789,
-              'username': 'Chrono',
-              'discriminator': '1337',
-              'avatar': 'n/a'
-          }
-        )
-        this.room.roles[3].members.push(
-          {
-              'userId': 123456789,
-              'username': 'Chrono',
-              'discriminator': '1337',
-              'avatar': 'n/a'
-          }
-        )
 
         for (let i = 0; i < 12; i++) {
           this.room.huntStatuses[i].status = result.huntStatuses[i].status
@@ -483,6 +491,45 @@
             }
           }
         }
+      },
+      addDiscordUsernameToRoom: async function(discordUsername, memberType) {
+
+        discordUsername = discordUsername.replace('#', '~')
+        let discordString = discordUsername.split('~')
+        let username = discordString[0]
+        let discriminator = discordString[1]
+        await fetch(`/api/room/${this.room.name}/memberType/${memberType}/user/${discordUsername}`, {
+          method: 'POST'
+        })
+
+        let memberIndex = ['organizer', 'scout', 'member'].indexOf(memberType)
+        this.room.roles[memberIndex+1].members.push(
+          {
+            userId: "0",
+            username: username,
+            discriminator: discriminator,
+            avatar: "0"
+          }
+        )
+
+        this.organizerUsername = ''
+        this.scoutUsername = ''
+        this.memberUsername = ''
+
+      },
+      deleteDiscordUsernameFromRoom: async function(discordUsername, memberType, index) {
+
+        discordUsername = discordUsername.replace('#', '~')
+        let discordString = discordUsername.split('~')
+        let username = discordString[0]
+        let discriminator = discordString[1]
+
+        await fetch(`/api/room/${this.room.name}/user/${discordUsername}`, {
+          method: 'DELETE'
+        })
+
+        let memberIndex = ['organizer', 'scout', 'member'].indexOf(memberType)
+        this.room.roles[memberIndex+1].members.splice(index)
       }
     }
   }

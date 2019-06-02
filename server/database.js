@@ -1,8 +1,8 @@
-const mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+const mongoose = require('mongoose')
+var Schema = mongoose.Schema
 
-const mongoUrl = process.env.MONGO_URL;
-mongoose.connect(mongoUrl, {useNewUrlParser: true});
+const mongoUrl = process.env.MONGO_URL
+mongoose.connect(mongoUrl, {useNewUrlParser: true})
 
 var roomSchema = new Schema({
     name: String,
@@ -27,12 +27,12 @@ var roomSchema = new Schema({
             ]
         }
     ]
-});
+})
 
-var Room = mongoose.model('Room', roomSchema);
+var Room = mongoose.model('Room', roomSchema)
 
 module.exports = {
     roomSchema: roomSchema,
     Room: Room,
     mongoose: mongoose
-};
+}

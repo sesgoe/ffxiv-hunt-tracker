@@ -1,21 +1,21 @@
-const express = require('express');
-const router = express.Router();
-const session = require('express-session');
+const express = require('express')
+const router = express.Router()
+const session = require('express-session')
 
-const passport = require('passport');
-const DiscordStrategy = require('passport-discord').Strategy;
-const MongoDBStore = require('connect-mongodb-session')(session);
+const passport = require('passport')
+const DiscordStrategy = require('passport-discord').Strategy
+const MongoDBStore = require('connect-mongodb-session')(session)
 
 module.exports = function (server, config) {
 
     var store = new MongoDBStore({
         uri: process.env.MONGO_URL,
         collection: process.env.MONGO_SESSION_COLLECTION
-    });
+    })
 
     store.on('error', function(error) {
-        console.error(error);
-    });
+        console.error(error)
+    })
 
     server.use(require('express-session')({
         secret: process.env.EXPRESS_SESSION_SECRET,
@@ -25,7 +25,7 @@ module.exports = function (server, config) {
         store: store,
         resave: false,
         saveUninitialized: false
-    }));
+    }))
 
     passport.use(new DiscordStrategy({
         clientID: process.env.DISCORD_CLIENT_ID,
@@ -38,27 +38,27 @@ module.exports = function (server, config) {
             discordUsername: profile.username,
             discordDiscriminator: profile.discriminator,
             discordAvatar: profile.avatar
-        };
-        return callback(null, user);
-    }));
+        }
+        return callback(null, user)
+    }))
 
     passport.serializeUser(function(user, done) {
-        done(null, user);
-    });
+        done(null, user)
+    })
 
     passport.deserializeUser(function(user, done) {
-        done(null, user);
-    });
+        done(null, user)
+    })
 
-    server.use(passport.initialize());
-    server.use(passport.session());
+    server.use(passport.initialize())
+    server.use(passport.session())
 
-    router.get('/api/discord/auth', passport.authenticate('discord'));
+    router.get('/api/discord/auth', passport.authenticate('discord'))
     router.get('/api/discord/auth/callback', passport.authenticate('discord', {
         failureRedirect: '/'
     }), function(req, res) {
         res.redirect('/')
-    });
+    })
 
-    server.use(router);
-};
+    server.use(router)
+}
