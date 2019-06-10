@@ -8,7 +8,9 @@ const moment = require('moment')
 require('dotenv').config()
 
 const database = require('./server/database')
-let passport = require('./server/routes/passport.js')
+const passport = require('./server/api/passport')
+const discord = require('./server/api/discord')
+const room = require('./server/api/room')
 
 let databaseService = require('./server/services/databaseService')
 
@@ -29,30 +31,9 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cors())
 
 // API calls
-
 passport(app, null)
-
-//get discord profile
-app.get('/api/discord/profile', function(req, res) {
-
-  if(!req.session.passport) {
-    return res.status(401).json()
-  }
-
-  return res.json({user: req.session.passport.user})
-})
-
-//get room by roomName
-app.get('/api/room/:roomName', async function(req, res) {
-
-  let room = await databaseService.getRoomByName(req.params.roomName)
-
-  if(room.error) {
-    return res.json({error: room.error})
-  }
-
-  return res.json({result: room})
-})
+discord(app, null)
+room(app, null)
 
 //get room stream of events
 app.get('/api/room/:roomName/stream', function(req, res) {
@@ -223,6 +204,7 @@ app.post('/api/room/:roomName', function(req, res) {
 
     return res.json({result: result})
   })
+
 })
 
 //add discord username+discrim to room as memberType
