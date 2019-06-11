@@ -25,5 +25,6 @@ let roomNameValidator = async function(req, res, next) {
 }
 
 module.exports = {
-    roomNameValidator: roomNameValidator
+    roomNameValidator: roomNameValidator,
+    roomNameValidatorHelper: roomNameValidatorHelper
 }
