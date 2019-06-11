@@ -13,6 +13,8 @@ let huntStatusValidatorHelper = async function(huntStatus) {
     if(['found', 'dead'].indexOf(huntStatus) < 0) {
         return errorFormatWithMessage('status path parameter must be either "found" or "dead"')
     }
+
+    return {error: false}
 }
 
 let huntStatusValidator = async function(req, res, next) {
@@ -27,5 +29,6 @@ let huntStatusValidator = async function(req, res, next) {
 }
 
 module.exports = {
-    huntStatusValidator: huntStatusValidator
+    huntStatusValidator: huntStatusValidator, 
+    huntStatusValidatorHelper: huntStatusValidatorHelper
 }

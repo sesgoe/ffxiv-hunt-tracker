@@ -29,5 +29,6 @@ let memberTypeValidator = async function(req, res, next) {
 }
 
 module.exports = {
-    memberTypeValidator: memberTypeValidator
+    memberTypeValidator: memberTypeValidator,
+    memberTypeValidatorHelper: memberTypeValidatorHelper
 }
