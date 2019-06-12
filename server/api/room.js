@@ -29,7 +29,7 @@ module.exports = async function(server, config) {
             let room = await databaseService.getRoomByName(req.params.roomName)
 
             if(room.error) {
-            return res.json({error: room.error})
+                return res.json({error: room.error})
             }
 
             return res.json({result: room})
@@ -45,25 +45,25 @@ module.exports = async function(server, config) {
             function updateHandler(updateObject) {
             if(updateObject.roomName === req.params.roomName) {
                 let update = {
-                name: updateObject.huntName,
-                status: updateObject.huntStatus,
-                deathTimestamp: updateObject.huntDeathTimestamp
+                    name: updateObject.huntName,
+                    status: updateObject.huntStatus,
+                    deathTimestamp: updateObject.huntDeathTimestamp
                 }
                 res.write(`data: ${JSON.stringify(update)}\n\n`)
             }
             }
 
             res.status(200).set({
-            'connection': 'keep-alive',
-            'cache-control': 'no-cache',
-            'content-type': 'text/event-stream'
+                'connection': 'keep-alive',
+                'cache-control': 'no-cache',
+                'content-type': 'text/event-stream'
             })
 
             eventHandler.on('roomUpdate', updateHandler)
 
             res.on('close', () => {
-            eventHandler.removeListener('roomUpdate', updateHandler)
-            res.end()
+                eventHandler.removeListener('roomUpdate', updateHandler)
+                res.end()
             })
 
       })
@@ -169,10 +169,10 @@ module.exports = async function(server, config) {
             })
 
             room.save(function(error, result) {
-            if(error) return res.json({error: error})
-            console.info(`Room name '${room.name}' created.`)
+                if(error) return res.json({error: error})
+                console.info(`Room name '${room.name}' created.`)
 
-            return res.json({result: result})
+                return res.json({result: result})
             })
 
       })
@@ -191,18 +191,18 @@ module.exports = async function(server, config) {
 
             //+1 because of roles[0] = owner
             room.roles[memberIndex+1].members.push(
-            {
-                userId: "0",
-                username: username,
-                discriminator: discriminator,
-                avatar: "0"
-            }
+                {
+                    userId: "0",
+                    username: username,
+                    discriminator: discriminator,
+                    avatar: "0"
+                }
             )
 
             room.save(function(error, result) {
-            if(error) return res.json({error: error})
+                if(error) return res.json({error: error})
 
-            return res.json({result: result})
+                return res.json({result: result})
             })
 
       })
@@ -218,12 +218,12 @@ module.exports = async function(server, config) {
             let discriminator = discordString[1]
 
             for(let i=1; i<4; i++) {
-            for(let j=0; j<room.roles[i].members.length; j++) {
-                if(room.roles[i].members[j].username === username && room.roles[i].members[j].discriminator === discriminator) {
-                room.roles[i].members.splice(j)
-                break
+                for(let j=0; j<room.roles[i].members.length; j++) {
+                    if(room.roles[i].members[j].username === username && room.roles[i].members[j].discriminator === discriminator) {
+                    room.roles[i].members.splice(j)
+                    break
+                    }
                 }
-            }
             }
 
             room.save(function(error, result) {
@@ -250,14 +250,14 @@ module.exports = async function(server, config) {
             '$set': {'huntStatuses.$.status': req.params.status, 'huntStatuses.$.deathTimestamp': now}
             },
             function(err, result) {
-            if(err) return res.json({error: err})
-            eventHandler.emitEvent('roomUpdate', {
-                roomName: req.params.roomName,
-                huntName: req.params.huntName,
-                huntStatus: req.params.status,
-                huntDeathTimestamp: now
-            })
-            return res.json(result)
+                if(err) return res.json({error: err})
+                eventHandler.emitEvent('roomUpdate', {
+                    roomName: req.params.roomName,
+                    huntName: req.params.huntName,
+                    huntStatus: req.params.status,
+                    huntDeathTimestamp: now
+                })
+                return res.json(result)
             })
 
       })

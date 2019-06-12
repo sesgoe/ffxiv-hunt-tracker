@@ -16,12 +16,12 @@ describe('huntStatusValidatorHelper', () => {
         let result = await huntStatusValidatorHelper('   ')
         expect(result.error).toBe(true)
     })
-    
+
     test('null hunt status is invalid', async() => {
         let result = await huntStatusValidatorHelper(null)
         expect(result.error).toBe(true)
     })
-    
+
     test('undefined hunt status is invalid', async() => {
         let result = await huntStatusValidatorHelper(undefined)
         expect(result.error).toBe(true)
@@ -35,6 +35,11 @@ describe('huntStatusValidatorHelper', () => {
     test('"dead" is valid', async () => {
         let result = await huntStatusValidatorHelper('dead')
         expect(result.error).toBe(false)
+    })
+
+    test('"dead2" is invalid', async () => {
+        let result = await huntStatusValidatorHelper('dead2')
+        expect(result.error).toBe(true)
     })
 
     test('"found" is valid', async () => {
