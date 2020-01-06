@@ -132,7 +132,7 @@
     </v-content>
     <v-footer app>
       <v-layout justify-center>
-        <span>&copy; Ses Goe 2019</span>
+        <span>&copy; <a href="https://twitter.com/sesgoe">Ses Goe</a> {{ currentYear }}</span>
       </v-layout>
     </v-footer>
 
@@ -210,7 +210,8 @@
       dialog: false,
       roomName: '',
       createRoomAlert: false,
-      createRoomError: ''
+      createRoomError: '',
+      currentYear: new Date().getFullYear()
     }),
     mounted: async function () {
       let profileJson = await fetch('/api/discord/profile')

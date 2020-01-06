@@ -1,20 +1,20 @@
 const Joi = require('@hapi/joi')
 const {errorFormatWithMessage} = require('./util/errorFormatWithMessage')
 
-let discordUsernameValidatorHelper = async function(discordUsername) {
+let discordUsernameValidatorHelper = async function(discordUserString) {
 
     const validDiscordUsername = Joi.string().min(1).alphanum().trim().required()
 
-    let result = Joi.validate(discordUsername, validDiscordUsername)
+    let result = Joi.validate(discordUserString, validDiscordUsername)
     if(result.error) {
         return errorFormatWithMessage("roomName path parameter must exist and be alphanumeric")
     }
 
-    if(discordUsername.indexOf('~') < 0) {
+    if(discordUserString.indexOf('~') < 0) {
         return errorFormatWithMessage("missing discord discriminator character '~'")
     }
 
-    let usernameSplitArray = discordUsername.split('~')
+    let usernameSplitArray = discordUserString.split('~')
     if(usernameSplitArray.length != 2) {
         return errorFormatWithMessage("missing either discord username or discriminator")
     }

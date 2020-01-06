@@ -1,4 +1,5 @@
 const express = require('express')
+const moment = require('moment')
 const router = express.Router()
 const {isAuthenticated} = require('./validators/authenticationValidator')
 const {roomNameValidator} = require('./validators/roomNameValidator')
@@ -8,6 +9,7 @@ const {huntNameValidator} = require('./validators/huntNameValidator')
 const {huntStatusValidator} = require('./validators/huntStatusValidator')
 
 let databaseService = require('../services/databaseService')
+let database = require('../database')
 
 const EventEmitter = require('events')
 class EventPassthrough extends EventEmitter {
@@ -41,7 +43,7 @@ module.exports = async function(server, config) {
         [isAuthenticated, roomNameValidator],
         async function(req, res) {
 
-            //how to refactor this better 0_0
+            //TODO: how to refactor this better 0_0
             function updateHandler(updateObject) {
             if(updateObject.roomName === req.params.roomName) {
                 let update = {
