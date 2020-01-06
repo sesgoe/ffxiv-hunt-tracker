@@ -1,7 +1,7 @@
 {
-  "name": "example-vue-node-express",
+  "name": "ffxiv-hunt-tracker",
   "version": "1.0.0",
-  "description": "Example on using Vue with a Node Express Backend",
+  "description": "FFXIV Hunt Tracker App",
   "author": {
     "name": "Ses Goe",
     "twitter": "@SesGoe"
