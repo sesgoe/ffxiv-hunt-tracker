@@ -6,6 +6,8 @@ const passport = require('passport')
 const DiscordStrategy = require('passport-discord').Strategy
 const MongoDBStore = require('connect-mongodb-session')(session)
 
+const databaseService = require('../services/databaseService')
+
 module.exports = function (server, config) {
 
     var store = new MongoDBStore({
@@ -32,12 +34,16 @@ module.exports = function (server, config) {
         clientSecret: process.env.DISCORD_CLIENT_SECRET,
         callbackURL: process.env.DISCORD_CALLBACK_URL,
         scope: ['identify']
-        }, function(accessToken, refreshToken, profile, callback) {
+        }, async function(accessToken, refreshToken, profile, callback) {
         var user = {
             discordId: profile.id,
             discordUsername: profile.username,
             discordDiscriminator: profile.discriminator,
             discordAvatar: profile.avatar
+        }
+        let result = await databaseService.updateUser(user)
+        if(!result) {
+            console.log("Error with user saving to database!")
         }
         return callback(null, user)
     }))

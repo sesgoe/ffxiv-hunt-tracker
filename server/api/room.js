@@ -25,7 +25,10 @@ module.exports = async function(server, config) {
     //get room by roomName
     router.get(
         '/api/room/:roomName',
-        [isAuthenticated, roomNameValidator],
+        [
+            isAuthenticated,
+            roomNameValidator
+        ],
         async function(req, res) {
 
             let room = await databaseService.getRoomByName(req.params.roomName)
@@ -37,22 +40,64 @@ module.exports = async function(server, config) {
             return res.json({result: room})
     })
 
+    //get all rooms for someone logged in
+    router.get(
+        '/api/rooms',
+        [
+            isAuthenticated
+        ],
+        async function(req, res) {
+
+            let rooms = await databaseService.getRoomsByDiscordUser(req.session.passport.user)
+
+            if(rooms.error) {
+                return res.json({error: rooms.error})
+            }
+
+            return res.json({result: rooms})
+    })
+
+    //create new room
+    router.post(
+        '/api/room/:roomName',
+        [
+            isAuthenticated,
+            roomNameValidator
+        ],
+        async function(req, res) {
+
+            let createdRoom = await databaseService.createRoom(req.params.roomName, req.session.passport.user)
+
+            if(createdRoom.constraint) {
+                if(createdRoom.constraint.includes('rooms_name_key')) {
+                    return res.status(400).json({error: "A room with that name already exists. Please pick another name."})
+                }
+                return res.status(500).json({error: "The room was unable to be created. Please try again later."})
+            }
+
+            return res.json({result: createdRoom})
+
+      })
+
     //get stream of room events
     router.get(
         '/api/room/:roomName/stream',
-        [isAuthenticated, roomNameValidator],
+        [
+            isAuthenticated,
+            roomNameValidator
+        ],
         async function(req, res) {
 
             //TODO: how to refactor this better 0_0
             function updateHandler(updateObject) {
-            if(updateObject.roomName === req.params.roomName) {
-                let update = {
-                    name: updateObject.huntName,
-                    status: updateObject.huntStatus,
-                    deathTimestamp: updateObject.huntDeathTimestamp
+                if(updateObject.roomName === req.params.roomName) {
+                    let update = {
+                        name: updateObject.huntName,
+                        status: updateObject.huntStatus,
+                        deathTimestamp: updateObject.huntDeathTimestamp
+                    }
+                    res.write(`data: ${JSON.stringify(update)}\n\n`)
                 }
-                res.write(`data: ${JSON.stringify(update)}\n\n`)
-            }
             }
 
             res.status(200).set({
@@ -70,148 +115,33 @@ module.exports = async function(server, config) {
 
       })
 
-      //create new room
-      router.post(
-        '/api/room/:roomName',
-        [isAuthenticated, roomNameValidator],
-        async function(req, res) {
-
-            var now = moment().valueOf()
-
-            const room = new database.Room({
-            name: req.params.roomName,
-            createdAt: now,
-            huntStatuses: [
-                {
-                    name: "Erle",
-                    status: "unknown",
-                    deathTimestamp: now
-                },
-                {
-                    name: "Orcus",
-                    status: "unknown",
-                    deathTimestamp: now
-                },
-                {
-                    name: "Luminare",
-                    status: "unknown",
-                    deathTimestamp: now
-                },
-                {
-                    name: "Mahisha",
-                    status: "unknown",
-                    deathTimestamp: now
-                },
-                {
-                    name: "Vochstein",
-                    status: "unknown",
-                    deathTimestamp: now
-                },
-                {
-                    name: "Aqrabuamelu",
-                    status: "unknown",
-                    deathTimestamp: now
-                },
-                {
-                    name: "Funa Yurei",
-                    status: "unknown",
-                    deathTimestamp: now
-                },
-                {
-                    name: "Oni Yumemi",
-                    status: "unknown",
-                    deathTimestamp: now
-                },
-                {
-                    name: "Angada",
-                    status: "unknown",
-                    deathTimestamp: now
-                },
-                {
-                    name: "Gajasura",
-                    status: "unknown",
-                    deathTimestamp: now
-                },
-                {
-                    name: "Sum",
-                    status: "unknown",
-                    deathTimestamp: now
-                },
-                {
-                    name: "Girimekhala",
-                    status: "unknown",
-                    deathTimestamp: now
-                }
-            ],
-            roles: [
-                {
-                    name: "Creator",
-                    members: [
-                    {
-                        'userId': req.session.passport.user.discordId,
-                        'username': req.session.passport.user.discordUsername,
-                        'discriminator': req.session.passport.user.discordDiscriminator,
-                        'avatar': req.session.passport.user.discordAvatar
-                    }
-                    ]
-                },
-                {
-                    name: "Hunt Train Organizer",
-                    members: []
-                },
-                {
-                    name: "Scout",
-                    members: []
-                },
-                {
-                    name: "Member",
-                    members: []
-                }
-            ]
-            })
-
-            room.save(function(error, result) {
-                if(error) return res.json({error: error})
-                console.info(`Room name '${room.name}' created.`)
-
-                return res.json({result: result})
-            })
-
-      })
-
       //add discord username+discrim to room as memberType
       router.post(
         '/api/room/:roomName/memberType/:memberType/user/:discordUsername',
-        [isAuthenticated, roomNameValidator, memberTypeValidator, discordUsernameValidator],
+        [
+            isAuthenticated,
+            roomNameValidator,
+            memberTypeValidator,
+            discordUsernameValidator
+        ],
         async function(req, res) {
 
             let room = await databaseService.getRoomByName(req.params.roomName)
-            let memberIndex = ['organizer', 'scout', 'member'].indexOf(req.params.memberType)
             let discordString = req.params.discordUsername.split('~')
             let username = discordString[0]
             let discriminator = discordString[1]
+            let discordUser = await databaseService.getDiscordUserByDiscordUsernameAndDiscordDiscriminator(username, discriminator)
 
-            //+1 because of roles[0] = owner
-            room.roles[memberIndex+1].members.push(
-                {
-                    userId: "0",
-                    username: username,
-                    discriminator: discriminator,
-                    avatar: "0"
-                }
-            )
-
-            room.save(function(error, result) {
-                if(error) return res.json({error: error})
-
-                return res.json({result: result})
-            })
 
       })
 
       router.delete(
         '/api/room/:roomName/user/:discordUsername',
-        [isAuthenticated, roomNameValidator, discordUsernameValidator],
+        [
+            isAuthenticated,
+            roomNameValidator,
+            discordUsernameValidator
+        ],
         async function(req, res) {
 
             let room = await databaseService.getRoomByName(req.params.roomName)
@@ -236,33 +166,27 @@ module.exports = async function(server, config) {
 
       })
 
-      //update hunt status for room, hunt combo
-      router.put(
-          '/api/room/:roomName/hunt/:huntName/status/:status',
-          [isAuthenticated, roomNameValidator, huntNameValidator, huntStatusValidator],
-          function(req, res) {
+    //update hunt status for room, hunt combo
+    //TODO: Update to use huntId instead of name
+    router.put(
+    '/api/room/:roomName/hunt/:huntName/status/:status',
+    [
+        isAuthenticated,
+        roomNameValidator,
+        huntNameValidator,
+        huntStatusValidator
+    ],
+    function(req, res) {
 
-            let now = moment().valueOf()
+        const result = await database.updateMonsterStatusForRoom(1, 1, req.params.status)
 
-            database.Room.updateOne({
-            name: req.params.roomName,
-            'huntStatuses.name': req.params.huntName
-            },
-            {
-            '$set': {'huntStatuses.$.status': req.params.status, 'huntStatuses.$.deathTimestamp': now}
-            },
-            function(err, result) {
-                if(err) return res.json({error: err})
-                eventHandler.emitEvent('roomUpdate', {
-                    roomName: req.params.roomName,
-                    huntName: req.params.huntName,
-                    huntStatus: req.params.status,
-                    huntDeathTimestamp: now
-                })
-                return res.json(result)
-            })
+        if(!result) {
+            return res.status(500).json({error: "Unable to update monster status. Please try again."})
+        }
 
-      })
+        return res.json({result: "Successfully updated monster statuses."})
+
+    })
 
     server.use(router)
 

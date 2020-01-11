@@ -5,7 +5,9 @@ const {isAuthenticated} = require('./validators/authenticationValidator')
 module.exports = async function(server, config) {
 
     router.get('/api/discord/profile',
-    isAuthenticated,
+    [
+      isAuthenticated
+    ],
     function(req, res) {
         return res.json({user: req.session.passport.user})
       })

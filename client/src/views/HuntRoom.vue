@@ -492,8 +492,7 @@
           }
         }
       },
-      addDiscordUsernameToRoom: async function(discordUsername, memberType) {
-
+      addDiscordUsernameToRoom: async function (discordUsername, memberType) {
         discordUsername = discordUsername.replace('#', '~')
         let discordString = discordUsername.split('~')
         let username = discordString[0]
@@ -503,19 +502,18 @@
         })
 
         let memberIndex = ['organizer', 'scout', 'member'].indexOf(memberType)
-        this.room.roles[memberIndex+1].members.push(
+        this.room.roles[memberIndex + 1].members.push(
           {
-            userId: "0",
+            userId: '0',
             username: username,
             discriminator: discriminator,
-            avatar: "0"
+            avatar: '0'
           }
         )
 
         this.organizerUsername = ''
         this.scoutUsername = ''
         this.memberUsername = ''
-
       },
       deleteDiscordUsernameFromRoom: async function(discordUsername, memberType, index) {
 

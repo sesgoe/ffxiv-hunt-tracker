@@ -219,12 +219,10 @@
       this.profile = result.user
 
       if (this.profile) {
-        let roomsJson = await fetch(`/api/user/${this.profile.discordUsername}~${this.profile.discordDiscriminator}/rooms/`)
+        let roomsJson = await fetch(`/api/rooms`)
         let jsonResponse = await roomsJson.json()
         this.roomList = jsonResponse.result
-        if (this.roomList) {
-          this.roomList = this.roomList.sort(this.compare)
-        }
+        console.log(this.roomList)
       }
     },
     methods: {
