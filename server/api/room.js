@@ -1,12 +1,12 @@
 const express = require('express')
-const moment = require('moment')
 const router = express.Router()
-const {isAuthenticated} = require('./validators/authenticationValidator')
-const {roomNameValidator} = require('./validators/roomNameValidator')
-const {memberTypeValidator} = require('./validators/memberTypeValidator')
-const {discordUsernameValidator} = require('./validators/discordUsernameValidator')
-const {huntNameValidator} = require('./validators/huntNameValidator')
-const {huntStatusValidator} = require('./validators/huntStatusValidator')
+const {isAuthenticated} = require('./validators/pathValidators/authenticationValidator')
+const {roomIdValidator} = require('./validators/pathValidators/roomIdValidator')
+const {memberTypeIdValidator} = require('./validators/pathValidators/memberTypeIdValidator')
+const {discordUserValidator} = require('./validators/bodyValidators/discordUserValidator')
+const {huntIdValidator} = require('./validators/pathValidators/huntIdValidator')
+const {huntStatusValidator} = require('./validators/pathValidators/huntStatusValidator')
+const {roomNameValidator} = require('./validators/bodyValidators/roomNameValidator')
 
 let databaseService = require('../services/databaseService')
 let database = require('../database')
@@ -22,16 +22,18 @@ let eventHandler = new EventPassthrough()
 
 module.exports = async function(server, config) {
 
-    //get room by roomName
+    //get room by roomId
     router.get(
-        '/api/room/:roomName',
+        '/api/room/:roomId',
         [
             isAuthenticated,
-            roomNameValidator
+            roomIdValidator
         ],
         async function(req, res) {
 
-            let room = await databaseService.getRoomByName(req.params.roomName)
+            let roomId = req.params.roomId
+
+            let room = await databaseService.getRoomById(roomId)
 
             if(room.error) {
                 return res.json({error: room.error})
@@ -42,13 +44,15 @@ module.exports = async function(server, config) {
 
     //get all rooms for someone logged in
     router.get(
-        '/api/rooms',
+        '/api/room',
         [
             isAuthenticated
         ],
         async function(req, res) {
 
-            let rooms = await databaseService.getRoomsByDiscordUser(req.session.passport.user)
+            let discordUser = req.session.passport.user
+
+            let rooms = await databaseService.getRoomsByDiscordUser(discordUser)
 
             if(rooms.error) {
                 return res.json({error: rooms.error})
@@ -59,14 +63,17 @@ module.exports = async function(server, config) {
 
     //create new room
     router.post(
-        '/api/room/:roomName',
+        '/api/room',
         [
             isAuthenticated,
             roomNameValidator
         ],
         async function(req, res) {
 
-            let createdRoom = await databaseService.createRoom(req.params.roomName, req.session.passport.user)
+            let roomName = req.body.name
+            let discordUser = req.session.passport.user
+
+            let createdRoom = await databaseService.createRoom(roomName, discordUser)
 
             if(createdRoom.constraint) {
                 if(createdRoom.constraint.includes('rooms_name_key')) {
@@ -77,22 +84,22 @@ module.exports = async function(server, config) {
 
             return res.json({result: createdRoom})
 
-      })
+    })
 
     //get stream of room events
     router.get(
-        '/api/room/:roomName/stream',
+        '/api/room/:roomId/stream',
         [
             isAuthenticated,
-            roomNameValidator
+            roomIdValidator
         ],
         async function(req, res) {
 
             //TODO: how to refactor this better 0_0
             function updateHandler(updateObject) {
-                if(updateObject.roomName === req.params.roomName) {
+                if(updateObject.roomId === req.params.roomId) {
                     let update = {
-                        name: updateObject.huntName,
+                        id: updateObject.huntId,
                         status: updateObject.huntStatus,
                         deathTimestamp: updateObject.huntDeathTimestamp
                     }
@@ -113,81 +120,72 @@ module.exports = async function(server, config) {
                 res.end()
             })
 
-      })
+    })
 
-      //add discord username+discrim to room as memberType
-      router.post(
-        '/api/room/:roomName/memberType/:memberType/user/:discordUsername',
+    //add discord username+discrim to room as memberTypeId
+    router.post(
+        '/api/room/:roomId/memberType/:memberTypeId/user',
         [
             isAuthenticated,
-            roomNameValidator,
-            memberTypeValidator,
-            discordUsernameValidator
+            roomIdValidator,
+            memberTypeIdValidator,
+            discordUserValidator
         ],
         async function(req, res) {
 
-            let room = await databaseService.getRoomByName(req.params.roomName)
-            let discordString = req.params.discordUsername.split('~')
-            let username = discordString[0]
-            let discriminator = discordString[1]
-            let discordUser = await databaseService.getDiscordUserByDiscordUsernameAndDiscordDiscriminator(username, discriminator)
+            let roomId = req.params.roomId
+            let discordUser = req.body.discordUser
+
+            let room = await databaseService.getRoomById(roomId)
+            let dbDiscordUser = await databaseService.getDiscordUserByDiscordUsernameAndDiscordDiscriminator(discordUser.username, discordUser.discriminator)
 
 
-      })
+    })
 
-      router.delete(
-        '/api/room/:roomName/user/:discordUsername',
+    router.delete(
+        '/api/room/:roomId/user',
         [
             isAuthenticated,
-            roomNameValidator,
-            discordUsernameValidator
+            roomIdValidator,
+            discordUserValidator
         ],
         async function(req, res) {
 
-            let room = await databaseService.getRoomByName(req.params.roomName)
-            let discordString = req.params.discordUsername.split('~')
-            let username = discordString[0]
-            let discriminator = discordString[1]
+            let roomId = req.params.roomId
+            let discordUser = req.params.discordUser
 
-            for(let i=1; i<4; i++) {
-                for(let j=0; j<room.roles[i].members.length; j++) {
-                    if(room.roles[i].members[j].username === username && room.roles[i].members[j].discriminator === discriminator) {
-                    room.roles[i].members.splice(j)
-                    break
-                    }
-                }
-            }
+            let room = await databaseService.getRoomById(roomId)
 
-            room.save(function(error, result) {
-            if(error) return res.json({error: error})
 
-            return res.json({result: result})
-            })
-
-      })
+    })
 
     //update hunt status for room, hunt combo
     //TODO: Update to use huntId instead of name
     router.put(
-    '/api/room/:roomName/hunt/:huntName/status/:status',
-    [
-        isAuthenticated,
-        roomNameValidator,
-        huntNameValidator,
-        huntStatusValidator
-    ],
-    function(req, res) {
+        '/api/room/:roomId/hunt/:huntId/status/:status',
+        [
+            isAuthenticated,
+            roomIdValidator,
+            huntIdValidator,
+            huntStatusValidator
+        ],
+        async function(req, res) {
 
-        const result = await database.updateMonsterStatusForRoom(1, 1, req.params.status)
+            let roomId = req.params.roomId
+            let monsterId = req.params.huntId
+            let monsterStatus = req.params.status
 
-        if(!result) {
-            return res.status(500).json({error: "Unable to update monster status. Please try again."})
-        }
+            const result = await database.updateMonsterStatusForRoom(roomId, monsterId, monsterStatus)
 
-        return res.json({result: "Successfully updated monster statuses."})
+            if(!result) {
+                return res.status(500).json({error: "Unable to update monster status. Please try again."})
+            }
+
+            return res.json({result: "Successfully updated monster statuses."})
 
     })
 
+    //------------
     server.use(router)
 
 }

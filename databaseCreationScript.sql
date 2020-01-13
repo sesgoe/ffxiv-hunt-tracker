@@ -14,9 +14,9 @@ CREATE TABLE monsters (
 
 CREATE TABLE users (
   discordId text PRIMARY KEY,
+  discordUsername text,
   discordDiscriminator text,
-  discordAvatar text,
-  discordUsername text
+  discordAvatar text
 );
 
 CREATE TABLE rooms (
@@ -34,7 +34,7 @@ CREATE TABLE roles (
 CREATE TABLE roomStatuses (
   roomId int,
   monsterId int,
-  currentStatus text,
+  currentStatus int, --(-1 = dead, 0 = unknown, 1 = )
   deathTimestamp timestamp
 );
 

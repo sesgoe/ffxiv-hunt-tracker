@@ -1,7 +1,3 @@
-let errorFormatWithMessage = function(message) {
+exports.errorFormatWithMessage = function(message) {
     return {error: true, message: message}
-}
-
-module.exports = {
-    errorFormatWithMessage: errorFormatWithMessage
 }

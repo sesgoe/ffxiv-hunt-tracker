@@ -29,24 +29,29 @@ module.exports = function (server, config) {
         saveUninitialized: false
     }))
 
-    passport.use(new DiscordStrategy({
-        clientID: process.env.DISCORD_CLIENT_ID,
-        clientSecret: process.env.DISCORD_CLIENT_SECRET,
-        callbackURL: process.env.DISCORD_CALLBACK_URL,
-        scope: ['identify']
-        }, async function(accessToken, refreshToken, profile, callback) {
-        var user = {
-            discordId: profile.id,
-            discordUsername: profile.username,
-            discordDiscriminator: profile.discriminator,
-            discordAvatar: profile.avatar
-        }
-        let result = await databaseService.updateUser(user)
-        if(!result) {
-            console.log("Error with user saving to database!")
-        }
-        return callback(null, user)
-    }))
+    passport.use(
+        new DiscordStrategy(
+            {
+                clientID: process.env.DISCORD_CLIENT_ID,
+                clientSecret: process.env.DISCORD_CLIENT_SECRET,
+                callbackURL: process.env.DISCORD_CALLBACK_URL,
+                scope: ['identify']
+            },
+            async function(accessToken, refreshToken, profile, callback) {
+                var user = {
+                    discordId: profile.id,
+                    discordUsername: profile.username,
+                    discordDiscriminator: profile.discriminator,
+                    discordAvatar: profile.avatar
+                }
+                let result = await databaseService.upsertUser(user)
+                if(!result) {
+                    console.log("Error with user saving to database!")
+                }
+                return callback(null, user)
+            }
+        )
+    )
 
     passport.serializeUser(function(user, done) {
         done(null, user)

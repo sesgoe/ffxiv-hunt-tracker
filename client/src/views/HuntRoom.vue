@@ -120,7 +120,10 @@
                   </v-tooltip>
                 </v-flex>
                 <v-flex xs4>
-                  <v-text-field v-model="organizerUsername" label="Discord Username" />
+                  <v-text-field
+                    v-model="organizerUsername"
+                    label="Discord Username"
+                  />
                 </v-flex>
                 <v-flex xs3>
                   <v-btn
@@ -132,10 +135,10 @@
                 </v-flex>
               </v-layout>
               <v-layout
-                justify-center
-                align-center
                 v-for="(organizer, idx) in room.roles[1].members"
                 :key="`1~${idx}~${organizer.username}~${organizer.discriminator}`"
+                justify-center
+                align-center
               >
                 <v-flex xs2>
                   <span>{{ organizer.username }}#{{ organizer.discriminator }}</span>
@@ -182,7 +185,10 @@
                   </v-tooltip>
                 </v-flex>
                 <v-flex xs4>
-                  <v-text-field v-model="scoutUsername" label="Discord Username" />
+                  <v-text-field
+                    v-model="scoutUsername"
+                    label="Discord Username"
+                  />
                 </v-flex>
                 <v-flex xs3>
                   <v-btn
@@ -194,10 +200,10 @@
                 </v-flex>
               </v-layout>
               <v-layout
-                justify-center
-                align-center
                 v-for="(scout, idx) in room.roles[2].members"
                 :key="`2~${idx}~${scout.username}~${scout.discriminator}`"
+                justify-center
+                align-center
               >
                 <v-flex xs2>
                   <span>{{ scout.username }}#{{ scout.discriminator }}</span>
@@ -244,7 +250,10 @@
                   </v-tooltip>
                 </v-flex>
                 <v-flex xs4>
-                  <v-text-field v-model="memberUsername" label="Discord Username" />
+                  <v-text-field
+                    v-model="memberUsername"
+                    label="Discord Username"
+                  />
                 </v-flex>
                 <v-flex xs3>
                   <v-btn
@@ -256,10 +265,10 @@
                 </v-flex>
               </v-layout>
               <v-layout
-                justify-center
-                align-center
                 v-for="(member, idx) in room.roles[3].members"
                 :key="`3~${idx}~${member.username}~${member.discriminator}`"
+                justify-center
+                align-center
               >
                 <v-flex xs2>
                   <span>{{ member.username }}#{{ member.discriminator }}</span>
@@ -515,8 +524,7 @@
         this.scoutUsername = ''
         this.memberUsername = ''
       },
-      deleteDiscordUsernameFromRoom: async function(discordUsername, memberType, index) {
-
+      deleteDiscordUsernameFromRoom: async function (discordUsername, memberType, index) {
         discordUsername = discordUsername.replace('#', '~')
         let discordString = discordUsername.split('~')
         let username = discordString[0]
@@ -527,7 +535,7 @@
         })
 
         let memberIndex = ['organizer', 'scout', 'member'].indexOf(memberType)
-        this.room.roles[memberIndex+1].members.splice(index)
+        this.room.roles[memberIndex + 1].members.splice(index)
       }
     }
   }

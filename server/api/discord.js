@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const {isAuthenticated} = require('./validators/authenticationValidator')
+const {isAuthenticated} = require('./validators/pathValidators/authenticationValidator')
 
 module.exports = async function(server, config) {
 

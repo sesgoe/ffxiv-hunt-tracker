@@ -1,7 +1,8 @@
 const database = require('../database')
+const uuidv4 = require('uuid/v4')
 
-exports.getRoomByName = async (roomName) => {
-    return database.getRoomByName(roomName)
+exports.getRoomById = async (roomName) => {
+    return database.getRoomById(roomName)
 }
 
 exports.getRoomsByDiscordUser = async (discordUser) => {
@@ -34,8 +35,17 @@ exports.getDiscordUserByDiscordUsernameAndDiscordDiscriminator = async (discordU
   return await database.getDiscordUserByDiscordUsernameAndDiscordDiscriminator(discordUsername, discordDiscriminator)
 }
 
-exports.updateUser = async(discordUser) => {
+exports.upsertUser = async(discordUser) => {
+
+  if(discordUser.discordId) {
+    return await database.upsertUser(discordUser)
+  }
+
+  discordUser.discordId = uuidv4()
+  discordUser.avatar = ''
+
   return await database.upsertUser(discordUser)
+
 }
 
 exports.updateMonsterStatus = async (roomId, monsterId, newStatus) => {

@@ -5,10 +5,10 @@ const pool = new Pool({
     connectionString: connectionString,
 })
 
-exports.getRoomByName = async (roomName) => {
+exports.getRoomById = async (roomId) => {
     try {
-        const queryText = 'select * from rooms where name = $1'
-        const queryValues = [roomName]
+        const queryText = 'select * from rooms where id = $1'
+        const queryValues = [roomId]
         const res = await pool.query(queryText, queryValues)
         return res.rows[0]
     } catch (err) {
@@ -81,7 +81,7 @@ exports.getUserByUsernameAndDiscriminator = async (discordUsername, discordDiscr
 
 exports.upsertUser = async(discordUser) => {
     try {
-        const queryText = 'insert into users (discordId, discordDiscriminator, discordAvatar, discordUsername) values ($1, $2, $3, $4) ' +
+        const queryText =   'insert into users (discordId, discordDiscriminator, discordAvatar, discordUsername) values ($1, $2, $3, $4) ' +
                             'on conflict (discordId) ' +
                             'do update set (discordUsername, discordDiscriminator, discordAvatar) = ($4, $2, $3) '
         const queryValues = [discordUser.discordId, discordUser.discordDiscriminator, discordUser.discordAvatar, discordUser.discordUsername]

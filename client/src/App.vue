@@ -219,7 +219,7 @@
       this.profile = result.user
 
       if (this.profile) {
-        let roomsJson = await fetch(`/api/rooms`)
+        let roomsJson = await fetch(`/api/room`)
         let jsonResponse = await roomsJson.json()
         this.roomList = jsonResponse.result
         console.log(this.roomList)
