@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS monsters CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS rooms CASCADE;
+DROP TABLE IF EXISTS roomAudits CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS roomStatuses CASCADE;
 DROP TABLE IF EXISTS roomRoles CASCADE;
@@ -23,7 +24,18 @@ CREATE TABLE rooms (
   id SERIAL PRIMARY KEY,
   name text UNIQUE,
   createdAt timestamp,
-  expansion varchar
+  expansion varchar,
+  isPrivate boolean
+);
+
+CREATE TABLE roomAudits (
+  id SERIAL PRIMARY KEY,
+  roomId int,
+  discordId text,
+  monsterId int,
+  previousStatus int,
+  newStatus int,
+  updateTimestamp timestamp
 );
 
 CREATE TABLE roles (
@@ -34,7 +46,7 @@ CREATE TABLE roles (
 CREATE TABLE roomStatuses (
   roomId int,
   monsterId int,
-  currentStatus int, --(-1 = dead, 0 = unknown, 1 = )
+  currentStatus int, --(-1 = dead, 0 = unknown, 1 = alive)
   deathTimestamp timestamp
 );
 
