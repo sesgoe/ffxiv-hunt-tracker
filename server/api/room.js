@@ -8,8 +8,9 @@ const {huntIdValidator} = require('./validators/pathValidators/huntIdValidator')
 const {huntStatusValidator} = require('./validators/pathValidators/huntStatusValidator')
 const {roomNameValidator} = require('./validators/bodyValidators/roomNameValidator')
 
-let databaseService = require('../services/databaseService')
-let database = require('../database')
+let monsterService = require('../services/monsterService')
+let roomService = require('../services/roomService')
+let userService = require('../services/userService')
 
 const EventEmitter = require('events')
 class EventPassthrough extends EventEmitter {
@@ -33,7 +34,7 @@ module.exports = async function(server, config) {
 
             let roomId = req.params.roomId
 
-            let room = await databaseService.getRoomById(roomId)
+            let room = await roomService.getRoomById(roomId)
 
             if(room.error) {
                 return res.json({error: room.error})
@@ -52,7 +53,7 @@ module.exports = async function(server, config) {
 
             let discordUser = req.session.passport.user
 
-            let rooms = await databaseService.getRoomsByDiscordUser(discordUser)
+            let rooms = await roomService.getRoomsByDiscordUser(discordUser)
 
             if(rooms.error) {
                 return res.json({error: rooms.error})
@@ -65,15 +66,21 @@ module.exports = async function(server, config) {
     router.post(
         '/api/room',
         [
-            isAuthenticated,
+            //isAuthenticated,
             roomNameValidator
         ],
         async function(req, res) {
 
             let roomName = req.body.name
-            let discordUser = req.session.passport.user
+            //let discordUser = req.session.passport.user
+            let discordUser = {
+                id: '109065059057041408',
+                username: 'Sestopher',
+                discriminator: '2430',
+                avatar: '496a6c3af37433b8966d7fcc7752d853'
+            }
 
-            let createdRoom = await databaseService.createRoom(roomName, discordUser)
+            let createdRoom = await roomService.createRoom(roomName, discordUser)
 
             if(createdRoom.constraint) {
                 if(createdRoom.constraint.includes('rooms_name_key')) {
@@ -126,7 +133,7 @@ module.exports = async function(server, config) {
     router.post(
         '/api/room/:roomId/memberType/:memberTypeId/user',
         [
-            isAuthenticated,
+           // isAuthenticated,
             roomIdValidator,
             memberTypeIdValidator,
             discordUserValidator
@@ -134,14 +141,20 @@ module.exports = async function(server, config) {
         async function(req, res) {
 
             let roomId = req.params.roomId
+            let roleId = req.params.memberTypeId
             let discordUser = req.body.discordUser
 
-            let room = await databaseService.getRoomById(roomId)
-            let dbDiscordUser = await databaseService.getDiscordUserByDiscordUsernameAndDiscordDiscriminator(discordUser.username, discordUser.discriminator)
+            let result = userService.addUserToRoomIdAsRoleId(discordUser, roomId, roleId)
 
+            if(!result) {
+                res.json({error: "Unable to add user to room. Please try again."})
+            }
+
+            res.json({result: result})
 
     })
 
+    //delete discord username+discrim from room
     router.delete(
         '/api/room/:roomId/user',
         [
@@ -154,13 +167,12 @@ module.exports = async function(server, config) {
             let roomId = req.params.roomId
             let discordUser = req.params.discordUser
 
-            let room = await databaseService.getRoomById(roomId)
+            let room = await roomService.getRoomById(roomId)
 
 
     })
 
     //update hunt status for room, hunt combo
-    //TODO: Update to use huntId instead of name
     router.put(
         '/api/room/:roomId/hunt/:huntId/status/:status',
         [
@@ -173,9 +185,9 @@ module.exports = async function(server, config) {
 
             let roomId = req.params.roomId
             let monsterId = req.params.huntId
-            let monsterStatus = req.params.status
+            let newStatus = req.params.status
 
-            const result = await database.updateMonsterStatusForRoom(roomId, monsterId, monsterStatus)
+            const result = await monsterService.updateMonsterStatus(roomId, monsterId, newStatus)
 
             if(!result) {
                 return res.status(500).json({error: "Unable to update monster status. Please try again."})

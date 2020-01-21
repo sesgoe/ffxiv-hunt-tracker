@@ -6,7 +6,7 @@ const passport = require('passport')
 const DiscordStrategy = require('passport-discord').Strategy
 const MongoDBStore = require('connect-mongodb-session')(session)
 
-const databaseService = require('../services/databaseService')
+const userService = require('../services/userService')
 
 module.exports = function (server, config) {
 
@@ -38,17 +38,17 @@ module.exports = function (server, config) {
                 scope: ['identify']
             },
             async function(accessToken, refreshToken, profile, callback) {
-                var user = {
-                    discordId: profile.id,
-                    discordUsername: profile.username,
-                    discordDiscriminator: profile.discriminator,
-                    discordAvatar: profile.avatar
+                var discordUser = {
+                    id: profile.id,
+                    username: profile.username,
+                    discriminator: profile.discriminator,
+                    avatar: profile.avatar
                 }
-                let result = await databaseService.upsertUser(user)
+                let result = await userService.upsertUser(discordUser)
                 if(!result) {
                     console.log("Error with user saving to database!")
                 }
-                return callback(null, user)
+                return callback(null, discordUser)
             }
         )
     )

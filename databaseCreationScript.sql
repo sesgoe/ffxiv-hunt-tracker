@@ -14,10 +14,11 @@ CREATE TABLE monsters (
 );
 
 CREATE TABLE users (
-  discordId text PRIMARY KEY,
+  discordId text UNIQUE,
   discordUsername text,
   discordDiscriminator text,
-  discordAvatar text
+  discordAvatar text,
+  PRIMARY KEY(discordUsername, discordDiscriminator)
 );
 
 CREATE TABLE rooms (
@@ -53,17 +54,15 @@ CREATE TABLE roomStatuses (
 CREATE TABLE roomRoles (
   userDiscordId text,
   roomId int,
-  roleId int
+  roleId int,
+  PRIMARY KEY (userDiscordId, roomId, roleId)
 );
 
 ALTER TABLE roomStatuses ADD FOREIGN KEY (roomId) REFERENCES rooms (id) ON DELETE CASCADE;
-
 ALTER TABLE roomStatuses ADD FOREIGN KEY (monsterId) REFERENCES monsters (id) ON DELETE CASCADE;
 
 ALTER TABLE roomRoles ADD FOREIGN KEY (userDiscordId) REFERENCES users (discordId) ON DELETE CASCADE;
-
 ALTER TABLE roomRoles ADD FOREIGN KEY (roomId) REFERENCES rooms (id) ON DELETE CASCADE;
-
 ALTER TABLE roomRoles ADD FOREIGN KEY (roleId) REFERENCES roles (id) ON DELETE CASCADE;
 
 INSERT INTO monsters (name, imagePath, expansion) VALUES ('Erle', '@/assets/hunts/erle.png', 'Stormblood');
